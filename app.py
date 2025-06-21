@@ -23,16 +23,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # === Daftar file zip model dari folder models/ dan tujuan ekstraksi ===
 # === Lokasi file .h5 model ===
 H5_MODELS = {
-    "classifier": "models/model_ktp_classifier_v3.h5",
+
     "ocr_general": "models/ocr_non_nik_model_v1.h5",
     "ocr_nik": "models/ocr_nik_model_v1.h5",
 }
 
 
 try:
-    print("🔄 Memuat model klasifikasi KTP...")
-    model_classifier = load_model(H5_MODELS['classifier'])
-    print("✅ model_ktp_classifier berhasil dimuat.")
+
 
     print("🔄 Memuat model OCR non-NIK...")
     model_ocr_general = load_model(H5_MODELS['ocr_general'])
@@ -43,46 +41,28 @@ try:
     print("✅ ocr_nik_model berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
-    model_classifier = None
+
     model_ocr_general = None
     model_ocr_nik = None
 
 
 def main(image_file):
-    if not all([model_classifier, model_ocr_general, model_ocr_nik]):
+    if not all([model_ocr_general, model_ocr_nik]):
         raise Exception("Model belum dimuat dengan benar.")
 
-    IMG_SIZE = (224, 224)
-    cropped_images = {}
+   
+    image_cv = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
 
-    # --- Langkah 1: Baca dan prediksi apakah gambar adalah KTP ---
-    img_pil = Image.open(image_file).convert('RGB')
-    img_np = np.array(img_pil)
-    img_for_pred = img_pil.resize(IMG_SIZE)
-    img_array = image.img_to_array(img_for_pred) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
-    prediction = model_classifier.predict(img_array)[0][0]
-    label = 'Bukan KTP' if prediction < 0.5 else 'KTP'
+    def resize_image_with_fixed_dimensions(image, target_width=1720, target_height=906):
+        return cv2.resize(image, (target_width, target_height), interpolation=cv2.INTER_AREA)
 
-    if label != 'KTP':
-        print("❌ Gambar yang diunggah bukan KTP.")
-        return {}
+    resized_image = resize_image_with_fixed_dimensions(image_cv)
 
-
-
-    if label == 'KTP':
-        image_cv = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-
-        def resize_image_with_fixed_dimensions(image, target_width=1720, target_height=906):
-            return cv2.resize(image, (target_width, target_height), interpolation=cv2.INTER_AREA)
-
-        resized_image = resize_image_with_fixed_dimensions(image_cv)
-
-        crop_left = int(resized_image.shape[1] * 0.23)
-        crop_right = int(resized_image.shape[1] * 0.76) 
-        crop_bottom = int(resized_image.shape[0] * 0.92)
-        cropped_image = resized_image[:crop_bottom, crop_left:crop_right]
-        cropped_images["input_image"] = cropped_image
+    crop_left = int(resized_image.shape[1] * 0.23)
+    crop_right = int(resized_image.shape[1] * 0.76) 
+    crop_bottom = int(resized_image.shape[0] * 0.92)
+    cropped_image = resized_image[:crop_bottom, crop_left:crop_right]
+    cropped_images["input_image"] = cropped_image
 
 
     def apply_closing(image, kernel_size=(1, 11), iterations=1):
