@@ -66,7 +66,8 @@ def main(image_file):
 
     if label != 'KTP':
         print("❌ Gambar yang diunggah bukan KTP.")
-        return {}
+        return {"error": "Bukan gambar KTP"}
+
 
 
 
@@ -315,10 +316,17 @@ def ocr_ktp():
 
     try:
         processed_ktp_data = main(image_file)
+        if "error" in processed_ktp_data:
+            return jsonify({
+                "status": "failed",
+                "message": processed_ktp_data["error"]
+            }), 400
+        
         return jsonify({
-            "status": "success" if processed_ktp_data else "failed",
+            "status": "success",
             "data": processed_ktp_data
         })
+
     except Exception as e:
         return jsonify({"status": "failed", "message": str(e)}), 500
 
