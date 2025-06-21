@@ -16,7 +16,15 @@ app = Flask(__name__)
 
 # Fungsi utama untuk memproses gambar
 def main(image_file):
-    model = load_model('model_ktp_classifier_v3.h5')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(BASE_DIR, 'model_ktp_classifier_v3.h5')
+    try:
+        model = load_model(model_path)
+        print("✅ Model berhasil dimuat.")
+        model.summary()
+    except Exception as e:
+        print(f"❌ Gagal load model: {e}")
+        
     IMG_SIZE = (224, 224)
     cropped_images = {}
 
@@ -164,8 +172,9 @@ def main(image_file):
 
     
     
-    model_general = load_model('ocr_non_nik_model_v1.h5', compile=False)
-    model_nik = load_model('ocr_nik_model_v1.h5', compile=False)
+    model_general = load_model(os.path.join(BASE_DIR, 'ocr_non_nik_model_v1.h5'), compile=False)
+    model_nik = load_model(os.path.join(BASE_DIR, 'ocr_nik_model_v1.h5'), compile=False)
+
 
     predicted_lines = []
     for idx, chars in cropped_characters_grouped.items():
