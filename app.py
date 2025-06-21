@@ -52,15 +52,15 @@ for key in ZIP_MODELS:
 # === Load semua model ===
 try:
     print("🔄 Memuat model klasifikasi KTP...")
-    model_classifier = load_model(EXTRACT_PATHS['classifier'])
+    model_classifier = TFSMLayer(EXTRACT_PATHS['classifier'])
     print("✅ model_ktp_classifier berhasil dimuat.")
 
     print("🔄 Memuat model OCR non-NIK...")
-    model_ocr_general = load_model(EXTRACT_PATHS['ocr_general'])
+    model_ocr_general = TFSMLayer(EXTRACT_PATHS['ocr_general'])
     print("✅ ocr_non_nik_model berhasil dimuat.")
 
     print("🔄 Memuat model OCR NIK...")
-    model_ocr_nik = load_model(EXTRACT_PATHS['ocr_nik'])
+    model_ocr_nik = TFSMLayer(EXTRACT_PATHS['ocr_nik'])
     print("✅ ocr_nik_model berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
