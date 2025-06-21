@@ -21,52 +21,34 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # === Daftar file zip model dari folder models/ dan tujuan ekstraksi ===
-ZIP_MODELS = {
-    "classifier": "models/model_ktp_classifier_savedmodel.zip",
-    "ocr_general": "models/model_ocr_non_nik_savedmodel.zip",
-    "ocr_nik": "models/model_ocr_nik_savedmodel.zip",
+# === Lokasi file .h5 model ===
+H5_MODELS = {
+    "classifier": "models/model_ktp_classifier_v3.h5",
+    "ocr_general": "models/ocr_non_nik_model_v1.h5",
+    "ocr_nik": "models/ocr_nik_model_v1.h5",
 }
 
 
-EXTRACT_PATHS = {
-    "classifier": "/tmp/model_classifier",
-    "ocr_general": "/tmp/model_ocr_general",
-    "ocr_nik": "/tmp/model_ocr_nik",
-}
+x
 
-# === Fungsi ekstrak zip jika belum ada ===
-def extract_model(zip_filename, extract_to):
-    zip_path = os.path.join(BASE_DIR, zip_filename)
-    if not os.path.exists(extract_to):
-        print(f"📦 Mengekstrak {zip_filename} ke {extract_to}...")
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_to)
-        print(f"✅ Ekstraksi selesai: {zip_filename}")
-    else:
-        print(f"ℹ️ Sudah diekstrak sebelumnya: {extract_to}")
-
-# === Ekstrak semua model ===
-for key in ZIP_MODELS:
-    extract_model(ZIP_MODELS[key], EXTRACT_PATHS[key])
-
-# === Load semua model ===
 try:
     print("🔄 Memuat model klasifikasi KTP...")
-    model_classifier = TFSMLayer(EXTRACT_PATHS['classifier'])
+    model_classifier = load_model(H5_MODELS['classifier'])
     print("✅ model_ktp_classifier berhasil dimuat.")
 
     print("🔄 Memuat model OCR non-NIK...")
-    model_ocr_general = TFSMLayer(EXTRACT_PATHS['ocr_general'])
+    model_ocr_general = load_model(H5_MODELS['ocr_general'])
     print("✅ ocr_non_nik_model berhasil dimuat.")
 
     print("🔄 Memuat model OCR NIK...")
-    model_ocr_nik = TFSMLayer(EXTRACT_PATHS['ocr_nik'])
+    model_ocr_nik = load_model(H5_MODELS['ocr_nik'])
     print("✅ ocr_nik_model berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
     model_classifier = None
     model_ocr_general = None
     model_ocr_nik = None
+
 
 def main(image_file):
     if not all([model_classifier, model_ocr_general, model_ocr_nik]):
