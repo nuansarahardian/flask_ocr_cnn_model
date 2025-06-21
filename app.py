@@ -11,6 +11,7 @@ import re
 import sys
 import json
 import zipfile
+from keras.layers import TFSMLayer
 
 # === Inisialisasi Flask App ===
 app = Flask(__name__)
@@ -51,15 +52,15 @@ for key in ZIP_MODELS:
 # === Load semua model ===
 try:
     print("🔄 Memuat model klasifikasi KTP...")
-    model_classifier = tf.keras.models.load_model(EXTRACT_PATHS["classifier"])
+    model_classifier = TFSMLayer(classifier_path, call_endpoint="serving_default")
     print("✅ model_ktp_classifier berhasil dimuat.")
 
     print("🔄 Memuat model OCR non-NIK...")
-    model_ocr_general = tf.keras.models.load_model(EXTRACT_PATHS["ocr_general"], compile=False)
+    model_ocr_general = TFSMLayer(ocr_general_path, call_endpoint="serving_default")
     print("✅ ocr_non_nik_model berhasil dimuat.")
 
     print("🔄 Memuat model OCR NIK...")
-    model_ocr_nik = tf.keras.models.load_model(EXTRACT_PATHS["ocr_nik"], compile=False)
+    model_ocr_nik = TFSMLayer(ocr_nik_path, call_endpoint="serving_default")
     print("✅ ocr_nik_model berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
