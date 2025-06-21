@@ -29,8 +29,6 @@ H5_MODELS = {
 }
 
 
-x
-
 try:
     print("🔄 Memuat model klasifikasi KTP...")
     model_classifier = load_model(H5_MODELS['classifier'])
