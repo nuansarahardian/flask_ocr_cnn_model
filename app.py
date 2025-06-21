@@ -52,15 +52,15 @@ for key in ZIP_MODELS:
 # === Load semua model ===
 try:
     print("🔄 Memuat model klasifikasi KTP...")
-    model_classifier = TFSMLayer(classifier_path, call_endpoint="serving_default")
+    model_classifier = TFSMLayer(EXTRACT_PATHS['classifier'], call_endpoint="serving_default")
     print("✅ model_ktp_classifier berhasil dimuat.")
 
     print("🔄 Memuat model OCR non-NIK...")
-    model_ocr_general = TFSMLayer(ocr_general_path, call_endpoint="serving_default")
+    model_ocr_general = TFSMLayer(EXTRACT_PATHS['ocr_general'], call_endpoint="serving_default")
     print("✅ ocr_non_nik_model berhasil dimuat.")
 
     print("🔄 Memuat model OCR NIK...")
-    model_ocr_nik = TFSMLayer(ocr_nik_path, call_endpoint="serving_default")
+    model_ocr_nik = TFSMLayer(EXTRACT_PATHS['ocr_nik'], call_endpoint="serving_default")
     print("✅ ocr_nik_model berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
@@ -230,7 +230,7 @@ def main(image_file):
 
     predicted_lines = []
     for idx, chars in cropped_characters_grouped.items():
-        model = model_nik if idx == 2 else model_general
+        model = model_ocr_nik if idx == 2 else model_ocr_general
         label_map = label_map_nik if idx == 2 else label_map_general
         predicted_lines.append(predict_line(chars, model, label_map))
 
