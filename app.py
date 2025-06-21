@@ -10,18 +10,31 @@ import re
 import sys
 import json
 
-
 # === Inisialisasi Flask App ===
 app = Flask(__name__)
 
 # === Load model sekali saat aplikasi dijalankan ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Cek keberadaan file model terlebih dahulu
+print("🧪 Mengecek keberadaan file model:")
+for fname in ['model_ktp_classifier_v3.h5', 'ocr_non_nik_model_v1.h5', 'ocr_nik_model_v1.h5']:
+    fpath = os.path.join(BASE_DIR, fname)
+    print(f"🔍 {fname}: {'✅ ADA' if os.path.exists(fpath) else '❌ TIDAK ADA'}")
+
+# Load model dengan log per langkah
 try:
+    print("🔄 Memuat model klasifikasi KTP...")
     model_classifier = load_model(os.path.join(BASE_DIR, 'model_ktp_classifier_v3.h5'))
+    print("✅ model_ktp_classifier_v3.h5 berhasil dimuat.")
+
+    print("🔄 Memuat model OCR non-NIK...")
     model_ocr_general = load_model(os.path.join(BASE_DIR, 'ocr_non_nik_model_v1.h5'), compile=False)
+    print("✅ ocr_non_nik_model_v1.h5 berhasil dimuat.")
+
+    print("🔄 Memuat model OCR NIK...")
     model_ocr_nik = load_model(os.path.join(BASE_DIR, 'ocr_nik_model_v1.h5'), compile=False)
-    print("✅ Semua model berhasil dimuat.")
+    print("✅ ocr_nik_model_v1.h5 berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
     model_classifier = None
