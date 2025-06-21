@@ -17,24 +17,60 @@ app = Flask(__name__)
 # Fungsi utama untuk memproses gambar
 def main(image_file):
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(BASE_DIR, 'model_ktp_classifier_v3.h5')
+    
+    # Load model klasifikasi KTP
     try:
-        model = load_model(model_path)
-        print("✅ Model berhasil dimuat.")
-        model.summary()
+        classifier_model_path = os.path.join(BASE_DIR, 'model_ktp_classifier_v3.h5')
+        model_classifier = load_model(classifier_model_path)
+        print("✅ Model klasifikasi KTP berhasil dimuat.")
     except Exception as e:
-        print(f"❌ Gagal load model: {e}")
-        
+        print(f"❌ Gagal load model klasifikasi KTP: {e}")
+        return {}
+
+    # Load model OCR non-NIK
+    try:
+        ocr_general_model_path = os.path.join(BASE_DIR, 'ocr_non_nik_model_v1.h5')
+        model_ocr_general = load_model(ocr_general_model_path, compile=False)
+        print("✅ Model OCR non-NIK berhasil dimuat.")
+    except Exception as e:
+        print(f"❌ Gagal load model OCR non-NIK: {e}")
+        return {}
+
+    # Load model OCR NIK
+    try:
+        ocr_nik_model_path = os.path.join(BASE_DIR, 'ocr_nik_model_v1.h5')
+        model_ocr_nik = load_model(ocr_nik_model_path, compile=False)
+        print("✅ Model OCR NIK berhasil dimuat.")
+    except Exception as e:
+        print(f"❌ Gagal load model OCR NIK: {e}")
+        return {}
+
+    # Mulai proses gambar
     IMG_SIZE = (224, 224)
     cropped_images = {}
 
-    img_pil = Image.open(image_file).convert('RGB')
+    # Buka gambar
+    try:
+        img_pil = Image.open(image_file).convert('RGB')
+    except Exception as e:
+        print(f"❌ Gagal membuka gambar: {e}")
+        return {}
+
     img_np = np.array(img_pil)
     img_for_pred = img_pil.resize(IMG_SIZE)
     img_array = image.img_to_array(img_for_pred) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
-    prediction = model.predict(img_array)[0][0]
+
+    prediction = model_classifier.predict(img_array)[0][0]
     label = 'Bukan KTP' if prediction < 0.5 else 'KTP'
+
+    print(f"📄 Prediksi klasifikasi: {label}")
+
+    if label != 'KTP':
+        print("❌ Gambar yang diunggah bukan KTP.")
+        return {}
+
+
 
     if label == 'KTP':
         image_cv = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
@@ -172,8 +208,6 @@ def main(image_file):
 
     
     
-    model_general = load_model(os.path.join(BASE_DIR, 'ocr_non_nik_model_v1.h5'), compile=False)
-    model_nik = load_model(os.path.join(BASE_DIR, 'ocr_nik_model_v1.h5'), compile=False)
 
 
     predicted_lines = []
