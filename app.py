@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # === Daftar file zip model dari folder models/ dan tujuan ekstraksi ===
 # === Lokasi file .h5 model ===
 H5_MODELS = {
-    "classifier": "models/model_ktp_classifier_v3.h5",
+    "classifier": "models/model_ktp_classifier.h5",
     "ocr_general": "models/ocr_non_nik_model_v1.h5",
     "ocr_nik": "models/ocr_nik_model_v1.h5",
 }
