@@ -9,32 +9,57 @@ import io
 import re
 import sys
 import json
+import zipfile
 
 # === Inisialisasi Flask App ===
 app = Flask(__name__)
 
-# === Load model sekali saat aplikasi dijalankan ===
+# === Lokasi direktori aplikasi ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Cek keberadaan file model terlebih dahulu
-print("🧪 Mengecek keberadaan file model:")
-for fname in ['model_ktp_classifier_v3.h5', 'ocr_non_nik_model_v1.h5', 'ocr_nik_model_v1.h5']:
-    fpath = os.path.join(BASE_DIR, fname)
-    print(f"🔍 {fname}: {'✅ ADA' if os.path.exists(fpath) else '❌ TIDAK ADA'}")
 
-# Load model dengan log per langkah
+# === Daftar file zip model dari folder models/ dan tujuan ekstraksi ===
+ZIP_MODELS = {
+    "classifier": "models/model_ktp_classifier_savedmodel.zip",
+    "ocr_general": "models/model_ocr_non_nik_savedmodel.zip",
+    "ocr_nik": "models/model_ocr_nik_savedmodel.zip",
+}
+
+
+EXTRACT_PATHS = {
+    "classifier": "/tmp/model_classifier",
+    "ocr_general": "/tmp/model_ocr_general",
+    "ocr_nik": "/tmp/model_ocr_nik",
+}
+
+# === Fungsi ekstrak zip jika belum ada ===
+def extract_model(zip_filename, extract_to):
+    zip_path = os.path.join(BASE_DIR, zip_filename)
+    if not os.path.exists(extract_to):
+        print(f"📦 Mengekstrak {zip_filename} ke {extract_to}...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_to)
+        print(f"✅ Ekstraksi selesai: {zip_filename}")
+    else:
+        print(f"ℹ️ Sudah diekstrak sebelumnya: {extract_to}")
+
+# === Ekstrak semua model ===
+for key in ZIP_MODELS:
+    extract_model(ZIP_MODELS[key], EXTRACT_PATHS[key])
+
+# === Load semua model ===
 try:
     print("🔄 Memuat model klasifikasi KTP...")
-    model_classifier = load_model(os.path.join(BASE_DIR, 'model_ktp_classifier_v3.h5'))
-    print("✅ model_ktp_classifier_v3.h5 berhasil dimuat.")
+    model_classifier = tf.keras.models.load_model(EXTRACT_PATHS["classifier"])
+    print("✅ model_ktp_classifier berhasil dimuat.")
 
     print("🔄 Memuat model OCR non-NIK...")
-    model_ocr_general = load_model(os.path.join(BASE_DIR, 'ocr_non_nik_model_v1.h5'), compile=False)
-    print("✅ ocr_non_nik_model_v1.h5 berhasil dimuat.")
+    model_ocr_general = tf.keras.models.load_model(EXTRACT_PATHS["ocr_general"], compile=False)
+    print("✅ ocr_non_nik_model berhasil dimuat.")
 
     print("🔄 Memuat model OCR NIK...")
-    model_ocr_nik = load_model(os.path.join(BASE_DIR, 'ocr_nik_model_v1.h5'), compile=False)
-    print("✅ ocr_nik_model_v1.h5 berhasil dimuat.")
+    model_ocr_nik = tf.keras.models.load_model(EXTRACT_PATHS["ocr_nik"], compile=False)
+    print("✅ ocr_nik_model berhasil dimuat.")
 except Exception as e:
     print(f"❌ Gagal memuat model: {e}")
     model_classifier = None
