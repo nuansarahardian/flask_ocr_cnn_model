@@ -1,4 +1,6 @@
 from tensorflow.keras.preprocessing import image
+from flask import Flask, request, jsonify
+import os
 from tensorflow.keras.models import load_model
 import numpy as np
 import cv2
@@ -8,14 +10,17 @@ import re
 import sys
 import json
 
+
+# === Inisialisasi Flask App ===
+app = Flask(__name__)
+
 # Fungsi utama untuk memproses gambar
-def main(image_path):
-    model_path = 'C:/laragon/www/e-magang-TA/python/model_ktp_classifier_v3.h5'
-    model = load_model(model_path)
+def main(image_file):
+    model = load_model('model_ktp_classifier_v3.h5')
     IMG_SIZE = (224, 224)
     cropped_images = {}
 
-    img_pil = Image.open(image_path).convert('RGB')
+    img_pil = Image.open(image_file).convert('RGB')
     img_np = np.array(img_pil)
     img_for_pred = img_pil.resize(IMG_SIZE)
     img_array = image.img_to_array(img_for_pred) / 255.0
@@ -35,7 +40,8 @@ def main(image_path):
         crop_right = int(resized_image.shape[1] * 0.76) 
         crop_bottom = int(resized_image.shape[0] * 0.92)
         cropped_image = resized_image[:crop_bottom, crop_left:crop_right]
-        cropped_images[image_path] = cropped_image
+        cropped_images["input_image"] = cropped_image
+
 
     def apply_closing(image, kernel_size=(1, 11), iterations=1):
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
@@ -156,8 +162,10 @@ def main(image_path):
          'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '.', '/', ' '])}
     label_map_nik = {i: str(i) for i in range(10)}
 
-    model_general = load_model('C:/laragon/www/e-magang-TA/python/ktp_cnn_model_complete.h5', compile=False)
-    model_nik = load_model('C:/laragon/www/e-magang-TA/python/ocr_nik_model_v1.h5', compile=False)
+    
+    
+    model_general = load_model('ocr_non_nik_model_v1.h5', compile=False)
+    model_nik = load_model('ocr_nik_model_v1.h5', compile=False)
 
     predicted_lines = []
     for idx, chars in cropped_characters_grouped.items():
@@ -248,18 +256,25 @@ def main(image_path):
         processed_ktp_data = {}
 
     return processed_ktp_data
+    
+# === API Endpoint ===
+@app.route('/ocr-ktp', methods=['POST'])
+def ocr_ktp():
+    if 'image' not in request.files:
+        return jsonify({"status": "failed", "message": "No image uploaded"}), 400
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python ocr_script.py <image_path>")
-        sys.exit(1)
+    image_file = request.files['image']
+    if image_file.filename == '':
+        return jsonify({"status": "failed", "message": "No image selected"}), 400
 
-    image_path = sys.argv[1]
-    processed_ktp_data = main(image_path)
+    try:
+        processed_ktp_data = main(image_file)
+        return jsonify({
+            "status": "success" if processed_ktp_data else "failed",
+            "data": processed_ktp_data
+        })
+    except Exception as e:
+        return jsonify({"status": "failed", "message": str(e)}), 500
 
-    output = {
-        "status": "success" if processed_ktp_data else "failed",
-        "data": processed_ktp_data
-    }
-
-    print(json.dumps(output, indent=2, ensure_ascii=False))
+if __name__ == '__main__':
+    app.run(debug=True)
